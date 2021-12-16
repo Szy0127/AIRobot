@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton, QGridLayout
+from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton, QGridLayout,QTextBrowser
 from PyQt5.QtCore import QTimer
 from Voice import VoiceAssistant
 from threading import Thread
@@ -18,10 +18,10 @@ class VoiceGUI(QWidget):
         self.label_assistant = QLabel('语音助手：')
         self.layout.addWidget(self.label_assistant,4,1)
 
-        self.label_user_content = QLabel()
-        self.layout.addWidget(self.label_user_content,3,2)
-        self.label_assistant_content = QLabel()
-        self.layout.addWidget(self.label_assistant_content,4,2)
+        self.text_user_content = QTextBrowser()
+        self.layout.addWidget(self.text_user_content,3,2)
+        self.text_assistant_content = QTextBrowser()
+        self.layout.addWidget(self.text_assistant_content,4,2)
        
         self.button_switch = QPushButton('开启语音助手')
         self.button_switch.clicked.connect(self.switch_status)
@@ -47,8 +47,10 @@ class VoiceGUI(QWidget):
     def loginWechat(self):
         self.va.loginWechat()
     def refresh(self):
-        self.label_user_content.setText(self.va.user_content)
-        self.label_assistant_content.setText(self.va.assistant_content)
+        self.text_user_content.clear()
+        self.text_user_content.append(self.va.user_content)
+        self.text_assistant_content.clear()
+        self.text_assistant_content.append(self.va.assistant_content)
     def switch_status(self):
         self.running = not self.running
         if self.running:

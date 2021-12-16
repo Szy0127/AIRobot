@@ -3,13 +3,16 @@ from AIUI import AIUI
 from ASR import ASR
 from translate import Translate
 from wechat import Wechat
+from OCR import OCR
 import viVoicecloud as vv
 import os
+from time import sleep
 from threading import Thread
 INTERACTIVE_MODE = 0
 MUSIC_MODE = 1
 TRANSLATE_MODE = 2
 WECHAT_MODE = 3
+OCR_MODE = 4
 
 class Running:
     def __init__(self):
@@ -34,6 +37,7 @@ class VoiceAssistant:
         self.translate = Translate()
         self.voice = vv.tts()
         self.wechat = Wechat(self.fromUI)
+        self.ocr = OCR()
         self.translateLan = 'zh'
         self.status = INTERACTIVE_MODE
         self.voiceDict = {'zh':'xiaofeng','en':'henry'}
@@ -69,7 +73,7 @@ class VoiceAssistant:
             Thread(target=self._say,args=(text,language)).start()
 
     def keyWord(self,key,content):
-        return key in content and len(content) < 5
+        return key in content and len(content) < 8 
 
     def wechatWord(self,content):
         if '给' in content and '发消息' in content:
@@ -103,6 +107,11 @@ class VoiceAssistant:
         else:
             self.say('登录失败')
 
+    def toOCR(self):
+        self.say('请将摄像头对准需要识别的区域')
+        self.status = OCR_MODE
+        Thread(target=self.ocr.start).start()
+
     def process(self,content):
         if self.status == INTERACTIVE_MODE:
             if self.keyWord('退出',content):
@@ -114,6 +123,12 @@ class VoiceAssistant:
             if self.keyWord('翻译',content):
                 self.toTranslate()
                 return 
+            if self.keyWord('登录微信',content):
+                self.loginWechat()
+                return
+            if self.keyWord('文字识别',content):
+                self.toOCR()
+                return
             if self.keyWord('提高音量',content):
                 self.increaseVolume()
                 self.say('音量提高至'+str(self.volume))
@@ -121,9 +136,6 @@ class VoiceAssistant:
             if self.keyWord('降低音量',content):
                 self.decreaseVolume()
                 self.say('音量降低至'+str(self.volume))
-                return
-            if self.keyWord('登录微信',content):
-                self.loginWechat()
                 return
             if self.wechatWord(content): #name:= self.wechatWord(content)    
                 if self.wechat.isLogin:
@@ -184,6 +196,21 @@ class VoiceAssistant:
             else:
                 self.say('发送失败,请再说一遍')
             return
+        if self.status == OCR_MODE:
+            if self.keyWord('返回',content):
+                self.say('返回交互模式')
+                self.status = INTERACTIVE_MODE
+                self.ocr.finish()
+                return
+            if self.keyWord('这是什么',content):
+                self.say('正在识别')
+                self.ocr.recognize()
+                sleep(3)#识别需要时间 否则会读到上一次的结果
+                if self.ocr.words:
+                    self.say(''.join(self.ocr.words))
+                else:
+                    self.say('识别失败')
+                return
 
     def run(self):
         self.running.run()
@@ -197,6 +224,9 @@ class VoiceAssistant:
                     continue
                 if content[-1] in '.。':
                     content = content[:-1]
+                #say是开线程的 say的时候也在listen 很容易听到say的内容
+                if content in self.assistant_content:
+                    return
                 self.user_content = content
                 self.process(content)
         except Exception as e:
