@@ -4,6 +4,7 @@ from ASR import ASR
 from translate import Translate
 from wechat import Wechat
 from OCR import OCR
+from YOLO import YOLO
 import viVoicecloud as vv
 import os
 from time import sleep
@@ -13,6 +14,7 @@ MUSIC_MODE = 1
 TRANSLATE_MODE = 2
 WECHAT_MODE = 3
 OCR_MODE = 4
+YOLO_MODE = 5
 
 class Running:
     def __init__(self):
@@ -38,6 +40,7 @@ class VoiceAssistant:
         self.voice = vv.tts()
         self.wechat = Wechat(self.fromUI)
         self.ocr = OCR()
+        self.yolo = YOLO()
         self.translateLan = 'zh'
         self.status = INTERACTIVE_MODE
         self.voiceDict = {'zh':'xiaofeng','en':'henry'}
@@ -111,6 +114,12 @@ class VoiceAssistant:
         self.say('请将摄像头对准需要识别的区域')
         self.status = OCR_MODE
         Thread(target=self.ocr.start).start()
+    
+    def toYOLO(self):
+        self.say('请将摄像头对准需要识别的区域')
+        self.status = YOLO_MODE
+        Thread(target=self.yolo.start).start()
+
 
     def process(self,content):
         if self.status == INTERACTIVE_MODE:
@@ -129,6 +138,10 @@ class VoiceAssistant:
             if self.keyWord('文字识别',content):
                 self.toOCR()
                 return
+            if self.keyWord('物体识别',content):
+                self.toYOLO()
+                return
+
             if self.keyWord('提高音量',content):
                 self.increaseVolume()
                 self.say('音量提高至'+str(self.volume))
@@ -211,6 +224,22 @@ class VoiceAssistant:
                 else:
                     self.say('识别失败')
                 return
+        if self.status == YOLO_MODE:
+            if self.keyWord('返回',content):
+                self.say('返回交互模式')
+                self.status = INTERACTIVE_MODE
+                self.yolo.finish()
+                return
+            if self.keyWord('这是什么',content):
+                self.say('正在识别')
+                self.yolo.recognize()
+                sleep(3)#识别需要时间 否则会读到上一次的结果
+                if self.yolo.objects:
+                    self.say(max(self.yolo.objects))
+                else:
+                    self.say('识别失败')
+                return
+                
 
     def run(self):
         self.running.run()

@@ -17,5 +17,6 @@
 
 待完成：
 
-- 图像识别
 - 文字图像识别的ui
+
+root下 yolo需要source /opt/intel/openvino_2021/bin/setupvars.sh

@@ -6,7 +6,6 @@ from time import sleep
 class OCR:
     def __init__(self,show = False):
         self.client = AipOcr(APP_ID,API_KEY,SECRET_KEY)
-        self.camera = cv2.VideoCapture(0)
         self.trigger = False
         self.stop = False
         self.words = []
@@ -33,18 +32,24 @@ class OCR:
         self.stop = True
 
     def start(self):
-        success,frame = self.camera.read()
+        #摄像头就一个 OCR和YOLO都得用 要么在Voice里获得对象 传到OCR和YOLO的类里 要么就进入模式再用 用完直接release
+        camera = cv2.VideoCapture(0)
+        success,frame = camera.read()
         while success:
             if self.show:
                 cv2.imshow('window',frame)
+            
             success,frame = self.camera.read()
             cv2.waitKey(10)
 
         
             #if cv2.waitKey(10) == ord('s'):
             if self.trigger:
-                self.words = self.analyze(frame)
                 self.trigger = False
+                if success:
+                    self.words = self.analyze(frame)
+                else:
+                    self.words = []
                 #print('words:',self.words)
             #if cv2.waitKey(100) == ord('q'):
             if self.stop:
@@ -52,8 +57,7 @@ class OCR:
         if self.show: 
             cv2.destroyAllWindows()
         
-    def __del__(self):
-        self.camera.release()
+        camera.release()
 
 if __name__ == '__main__':
     model = OCR()
@@ -63,6 +67,7 @@ if __name__ == '__main__':
             c = input()
             if c == 'q':
                 model.finish()
+                break
             elif c == 's':
                 model.recognize()
                 sleep(2)
