@@ -7,6 +7,9 @@ class OCR:
     def __init__(self,show = False):
         self.client = AipOcr(APP_ID,API_KEY,SECRET_KEY)
         self.trigger = False
+        self.waitForRes = 5
+        self.maxFail = self.waitForRes
+        self.fail = 0
         self.stop = False
         self.words = []
         self.show = show
@@ -22,11 +25,13 @@ class OCR:
             res = self.client.general(self.encode(img))
             words = [item['words'] for item in res['words_result']]
             return words
-        except:
+        except Exception as e:
+            print(e)
             return []
 
     def recognize(self):
         self.trigger = True
+        self.fail = 0
 
     def finish(self):
         self.stop = True
@@ -39,17 +44,20 @@ class OCR:
             if self.show:
                 cv2.imshow('window',frame)
             
-            success,frame = self.camera.read()
-            cv2.waitKey(10)
-
-        
+            success,frame = camera.read()
+            sleep(1) 
+            #如果这里用cv.waitKey(10) 单独运行Voice可以跑 但是运行ui 就跑不了 会卡在这句话上 不知道为什么 好坑
             #if cv2.waitKey(10) == ord('s'):
             if self.trigger:
-                self.trigger = False
                 if success:
                     self.words = self.analyze(frame)
                 else:
                     self.words = []
+                if not self.words:
+                    self.fail += 1
+                    if self.fail > self.maxFail:
+                        self.trigger = False
+
                 #print('words:',self.words)
             #if cv2.waitKey(100) == ord('q'):
             if self.stop:

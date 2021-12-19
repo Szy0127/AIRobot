@@ -20,3 +20,5 @@
 - 文字图像识别的ui
 
 root下 yolo需要source /opt/intel/openvino_2021/bin/setupvars.sh
+
+os.system会报错 not found 但是ls没问题 不知道为什么

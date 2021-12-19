@@ -39,6 +39,8 @@ class VoiceAssistant:
         self.translate = Translate()
         self.voice = vv.tts()
         self.wechat = Wechat(self.fromUI)
+        #self.ocr = OCR(self.fromUI)
+        #self.yolo = YOLO(self.fromUI)
         self.ocr = OCR()
         self.yolo = YOLO()
         self.translateLan = 'zh'
@@ -218,7 +220,7 @@ class VoiceAssistant:
             if self.keyWord('这是什么',content):
                 self.say('正在识别')
                 self.ocr.recognize()
-                sleep(3)#识别需要时间 否则会读到上一次的结果
+                sleep(self.ocr.waitForRes)#识别需要时间 否则会读到上一次的结果
                 if self.ocr.words:
                     self.say(''.join(self.ocr.words))
                 else:
@@ -233,7 +235,7 @@ class VoiceAssistant:
             if self.keyWord('这是什么',content):
                 self.say('正在识别')
                 self.yolo.recognize()
-                sleep(3)#识别需要时间 否则会读到上一次的结果
+                sleep(self.yolo.waitForRes)#识别需要时间 否则会读到上一次的结果
                 if self.yolo.objects:
                     self.say(max(self.yolo.objects))
                 else:

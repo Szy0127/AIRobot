@@ -6,7 +6,7 @@ class AIUI:
         self.can = 0
     def getAnswer(self,text):
         answer = vv.aiui(text)
-        print(answer)
+        #print(answer)
         if answer[0] != self.can or not answer[3]:
             res =  '回答不了'
         else:

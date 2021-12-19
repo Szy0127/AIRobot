@@ -3,6 +3,8 @@ from time import sleep
 import numpy as np, math
 from argparse import ArgumentParser
 from threading import Thread
+from os import system
+#system('sh /opt/intel/openvino_2021/bin/setupvars.sh')
 try:
     from armv7l.openvino.inference_engine import IENetwork, IECore#IEPlugin
 except:
@@ -28,9 +30,12 @@ class DetectionObject():
         
 class YOLO:
     def __init__(self,show = False):
+        self.waitForRes = 5
         self.show = show
         self.trigger = False
         self.stop = False
+        self.maxFail = self.waitForRes 
+        self.fail = 0
         self.objects = {}
         
         self.m_input_size = 416
@@ -60,7 +65,7 @@ class YOLO:
                   "toaster", "sink", "refrigerator", "book", "clock",
                   "vase", "scissors", "teddy bear", "hair drier", "toothbrush")
 
-        self.e2c = {'cat':'猫','book':'书','bottle':'瓶子','keyboard':'键盘','tvmonitor':'屏幕','dog':'狗'}
+        self.e2c = {'person':'人','cat':'猫','bird':'鸟','book':'书','bottle':'瓶子','keyboard':'键盘','tvmonitor':'屏幕','dog':'狗'}
         self.label_text_color = (255, 255, 255)
         self.label_background_color = (125, 175, 75)
         self.box_color = (255, 128, 0)
@@ -139,6 +144,7 @@ class YOLO:
     
     def recognize(self):
         self.trigger = True
+        self.fail = 0
         
     def start(self):
         camera_width = 640
@@ -182,7 +188,6 @@ class YOLO:
                 break
             
             if self.trigger:
-                self.trigger = False
                 self.objects = {}
                 resized_image = cv2.resize(image, (new_w, new_h), interpolation = cv2.INTER_CUBIC)
                 canvas = np.full((self.m_input_size, self.m_input_size, 3), 128)
@@ -224,6 +229,12 @@ class YOLO:
                             self.objects[name] = confidence
                     else:
                         self.objects[name] = confidence
+                    if not self.objects:
+                        self.fail += 1
+                        if self.fail > self.maxFail:
+                            self.trigger = False
+                    else:
+                        self.trigger = False
                     if self.show: 
                         label_text = self.LABELS[label] + " (" + "{:.1f}".format(confidence * 100) + "%)"
                         cv2.rectangle(image, (obj.xmin, obj.ymin), (obj.xmax, obj.ymax), self.box_color, self.box_thickness)
@@ -243,7 +254,7 @@ class YOLO:
 
 
 if __name__ == '__main__':
-    model = YOLO()
+    model = YOLO(True)
     t = Thread(target = model.start).start()
     while True:
         try:
@@ -253,7 +264,7 @@ if __name__ == '__main__':
                 break
             elif c == 's':
                 model.recognize()
-                sleep(2)
+                sleep(5)
                 print(model.objects)
         except:
             break
