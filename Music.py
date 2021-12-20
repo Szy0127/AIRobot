@@ -29,7 +29,7 @@ class Music:
         for i in range(len(song_list)):
             music_name.append(song_list[i]['name'] + '-' + song_list[i]['singer'][0]['name'])
 
-            print('{}.{}-{}'.format(i + 1, song_list[i]['name'], song_list[i]['singer'][0]['name']))
+            #print('{}.{}-{}'.format(i + 1, song_list[i]['name'], song_list[i]['singer'][0]['name']))
             url_list.append(self.url % (song_list[i]['mid']))
 
         content_json = requests.get(url=url_list[song_index])

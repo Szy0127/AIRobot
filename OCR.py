@@ -1,6 +1,12 @@
 from aip import AipOcr
 import cv2
-from KEY import *
+import sys
+try:
+    from KEY import *
+    OCR_READY = True
+except:
+    OCR_READY = False
+    sys.exit()
 from threading import Thread
 from time import sleep
 class OCR:

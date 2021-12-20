@@ -3,7 +3,7 @@ from AIUI import AIUI
 from ASR import ASR
 from translate import Translate
 from wechat import Wechat
-from OCR import OCR
+from OCR import OCR,OCR_READY
 from YOLO import YOLO
 import viVoicecloud as vv
 import os
@@ -43,7 +43,8 @@ class VoiceAssistant:
         self.wechat = Wechat(self.fromUI)
         #self.ocr = OCR(self.fromUI)
         #self.yolo = YOLO(self.fromUI)
-        self.ocr = OCR()
+        if OCR_READY:
+            self.ocr = OCR()
         self.yolo = YOLO()
         self.translateLan = 'zh'
         self.wait_lan = False
@@ -126,6 +127,9 @@ class VoiceAssistant:
 
 
     def toOCR(self):
+        if not OCR_READY:
+            self.say('缺少api密钥 无法使用ocr功能')
+            return
         self.say('请将摄像头对准需要识别的区域')
         self.status = OCR_MODE
         Thread(target=self.ocr.start).start()
