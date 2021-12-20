@@ -9,6 +9,7 @@ import viVoicecloud as vv
 import os
 from time import sleep
 from threading import Thread
+from os import system
 INTERACTIVE_MODE = 0
 MUSIC_MODE = 1
 TRANSLATE_MODE = 2
@@ -105,18 +106,20 @@ class VoiceAssistant:
         self.waitSongName = True
     
     def toWechat(self):
-        name = self.wechat.check(self.wechatWord(self.user_content))
-        print('name',name)
-        if name: 
-            self.say('你想给'+name+'发什么消息')
+        inputName = self.wechatWord(self.user_content)
+        outputName = self.wechat.check(inputName)
+        if outputName : 
+            self.say('你想给'+outputName+'发什么消息')
             self.status = WECHAT_MODE
         else:
-            self.say('不存在备注为'+name+'的好友')
+            self.say('不存在备注为'+inputName+'的好友')
 
     def loginWechat(self):
         self.say('请扫码登录微信')
         if self.wechat.login():
             self.say('登录成功')
+            #删掉扫描的二维码
+            system("t=`ps x|grep QR | awk '{print $1}' | awk 'NR==1'`&&kill ${t}")
             sleep(2)
         else:
             self.say('登录失败')
