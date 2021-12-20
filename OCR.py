@@ -68,7 +68,7 @@ class OCR:
         camera.release()
 
 if __name__ == '__main__':
-    model = OCR()
+    model = OCR(True)
     t = Thread(target = model.start).start()
     while True:
         try:

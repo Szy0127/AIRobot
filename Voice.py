@@ -30,7 +30,7 @@ class Running:
 class VoiceAssistant:
     def __init__(self,fromUI = False):
         self.fromUI = fromUI
-        self.volume = 20
+        self.volume = 60
         self.setVolume()
         self.running = Running()
         self.asr = ASR(self.running)
@@ -44,6 +44,7 @@ class VoiceAssistant:
         self.ocr = OCR()
         self.yolo = YOLO()
         self.translateLan = 'zh'
+        self.wait_lan = False
         self.status = INTERACTIVE_MODE
         self.voiceDict = {'zh':'xiaofeng','en':'henry'}
         self.waitSongName = False
@@ -91,6 +92,7 @@ class VoiceAssistant:
     def toTranslate(self):
         self.say('你想要翻译的源语言是中文还是英文')
         self.status = TRANSLATE_MODE
+        self.wait_lan = True
 
     def toMusic(self):
         self.say('你想听什么歌')
@@ -99,7 +101,8 @@ class VoiceAssistant:
     
     def toWechat(self):
         name = self.wechat.check(self.wechatWord(self.user_content))
-        if name:
+        print('name',name)
+        if name: 
             self.say('你想给'+name+'发什么消息')
             self.status = WECHAT_MODE
         else:
@@ -109,8 +112,10 @@ class VoiceAssistant:
         self.say('请扫码登录微信')
         if self.wechat.login():
             self.say('登录成功')
+            sleep(2)
         else:
             self.say('登录失败')
+
 
     def toOCR(self):
         self.say('请将摄像头对准需要识别的区域')
@@ -190,11 +195,17 @@ class VoiceAssistant:
                 self.say('返回交互模式')
                 self.status = INTERACTIVE_MODE
                 return        
-            if self.keyWord('中文',content):
-                self.translateLan = 'zh'
-                return
-            if self.keyWord('英文',content):
-                self.translateLan = 'en'
+            if self.wait_lan:
+                if self.keyWord('中文',content):
+                    self.wait_len = False
+                    self.translateLan = 'zh'
+                    self.say('你想翻译什么内容')
+                    return
+                if self.keyWord('英文',content):
+                    self.translateLan = 'en'
+                    self.say('what do you want to translate','en')
+                    self.wait_lan = False
+                    return
                 return
             res = self.translate.translate(content,self.translateLan)
             lanTo = 'zh' if self.translateLan == 'en' else 'en'
@@ -245,7 +256,8 @@ class VoiceAssistant:
 
     def run(self):
         self.running.run()
-        try:
+        if 1==1:
+        #try:
             self.say('你好，我是你的语音助手')
             while self.running():
                 content = self.asr.startSession()
@@ -256,10 +268,14 @@ class VoiceAssistant:
                 if content[-1] in '.。':
                     content = content[:-1]
                 #say是开线程的 say的时候也在listen 很容易听到say的内容
-                if content in self.assistant_content:
-                    return
+                if not self.wait_lan and len(set(content) & set(self.assistant_content)) > int(len(set(content))*0.5):
+                #if content in self.assistant_content:
+                    continue 
+                print('用户:',content)
                 self.user_content = content
                 self.process(content)
+        try:
+            pass
         except Exception as e:
             print(e)
         finally:

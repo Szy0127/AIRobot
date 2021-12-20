@@ -5,7 +5,7 @@ import viVoicecloud as vv
 from get_device import getDeviceIndexByName
 
 class ASR:
-    def __init__(self,running:list):
+    def __init__(self,running):
         self.device_in = getDeviceIndexByName("ac108")
         self.Sample_channels = 1  
         self.Sample_rate = 16000  
@@ -17,7 +17,7 @@ class ASR:
             channels=self.Sample_channels,input=True,input_device_index=self.device_in,start = False)
         vv.Login()
         self.asr = vv.asr()
-        self.running = running # only list can pass info 
+        self.running = running 
 
     def startSession(self,language='Chinese'):
         self.asr.SessionBegin(language=language)#开始语音识别
@@ -25,7 +25,7 @@ class ASR:
         print('***Listening...')
         #录音并上传到讯飞，当判定一句话已经结束时，status返回3
         status=0
-        while status!= self.sessionFinishFlag and self.running[0]:
+        while status!= self.sessionFinishFlag and self.running():
             frames=self.stream.read(int(self.Sample_rate*self.time_seconds),exception_on_overflow = False)
             ret,status,recStatus=self.asr.AudioWrite(frames)
     
@@ -34,7 +34,7 @@ class ASR:
     
         words=self.asr.GetResult()  #获取结果
         self.asr.SessionEnd()#结束语音识别
-        print('用户：',words)
+        #print('用户：',words)
         return words
     def __del__(self):
         vv.Logout()#注销
