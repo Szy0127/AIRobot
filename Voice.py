@@ -29,8 +29,9 @@ class Running:
 
 class VoiceAssistant:
     def __init__(self,fromUI = False):
+        self.flag = False # 防止应该接受的话被过滤
         self.fromUI = fromUI
-        self.volume = 60
+        self.volume = 20 
         self.setVolume()
         self.running = Running()
         self.asr = ASR(self.running)
@@ -87,13 +88,17 @@ class VoiceAssistant:
             return name
     
     def finish(self):
+        self.status = TRANSLATE_MODE
+        self.waitSongName = False
+        self.flag = False
+        self.music.release()
         self.running.stop()
 
     def toTranslate(self):
         self.say('你想要翻译的源语言是中文还是英文')
         self.status = TRANSLATE_MODE
+        self.flag = True
         self.wait_lan = True
-
     def toMusic(self):
         self.say('你想听什么歌')
         self.status = MUSIC_MODE
@@ -197,16 +202,18 @@ class VoiceAssistant:
                 return        
             if self.wait_lan:
                 if self.keyWord('中文',content):
-                    self.wait_len = False
+                    self.flag = False
+                    self.wait_lan = False
                     self.translateLan = 'zh'
                     self.say('你想翻译什么内容')
                     return
                 if self.keyWord('英文',content):
+                    self.wait_lan = False
                     self.translateLan = 'en'
                     self.say('what do you want to translate','en')
-                    self.wait_lan = False
                     return
                 return
+            self.flag = False
             res = self.translate.translate(content,self.translateLan)
             lanTo = 'zh' if self.translateLan == 'en' else 'en'
             self.say(res,lanTo)
@@ -268,7 +275,7 @@ class VoiceAssistant:
                 if content[-1] in '.。':
                     content = content[:-1]
                 #say是开线程的 say的时候也在listen 很容易听到say的内容
-                if not self.wait_lan and len(set(content) & set(self.assistant_content)) > int(len(set(content))*0.5):
+                if not self.flag and len(set(content) & set(self.assistant_content)) > int(len(set(content))*0.5):
                 #if content in self.assistant_content:
                     continue 
                 print('用户:',content)
@@ -279,6 +286,7 @@ class VoiceAssistant:
         except Exception as e:
             print(e)
         finally:
+            self.running.stop()
             self.say('再见')
 
 

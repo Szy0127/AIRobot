@@ -12,12 +12,8 @@
   - 继续
 - 翻译
 - 给xxx发消息
-- 文字识别
+- 文字识别 这里的api次数有限制  但是可以更换不同的api
 - 图像识别
-
-待完成：
-
-- 文字图像识别的ui
 
 root下 yolo需要source /opt/intel/openvino_2021/bin/setupvars.sh
 

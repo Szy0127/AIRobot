@@ -22,7 +22,8 @@ class OCR:
 
     def analyze(self,img):
         try:
-            res = self.client.general(self.encode(img))
+            res = self.client.basicAccurate(self.encode(img))
+            #res = self.client.general(self.encode(img))
             words = [item['words'] for item in res['words_result']]
             return words
         except Exception as e:
